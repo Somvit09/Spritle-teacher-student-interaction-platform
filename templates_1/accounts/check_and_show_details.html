@@ -22,24 +22,36 @@
           <div class="card-body ">
             <div class="table-full-width table-responsive">
               <table class="table">
-                  <thead>All tasks</thead>
+                  <thead>All Checked Tasks</thead>
                 <tbody>
                     <tr>
-                        <th>Teacher Name</th>
+                        <th>Student Name</th>
                         <th>Task Name</th>
-                        <th>Solve Task</th>
+                        <th>Answer</th>
+                        <th>Correct Answer</th>
+                        <th>Correct / Incorrect</th>
                     </tr>
-                {% for i, j, k in data %}
+                {% for i, j, k, l, m in data %}
                   <tr>
                     <td>
-                        {{ j }}
+                        {{ k }}
                     </td>
                     <td>
                         {{ i }}
                     </td>
-                      <td>
-                          <a href="{% url 'submit_result' k %}">Solve</a>
-                      </td>
+                    <td>
+                        {{ j }}
+                    </td>
+                    <td>
+                        {{ l }}
+                    </td>
+                    <td>
+                        {% if m %}
+                            <i class="tim-icons icon-check-2"></i>
+                        {% else %}
+                            <i class="tim-icons icon-simple-remove"></i>
+                        {% endif %}
+                    </td>
                   </tr>
                 {% endfor %}
                 </tbody>

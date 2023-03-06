@@ -10,11 +10,8 @@ urlpatterns = [
     path('register_teacher/', register_teacher, name="register_teacher"),
     path("logout/", views.logout, name="logout"),
     path("profile/", views.profile, name="profile"),
-    path("all_details/", views.all_details, name="all_details"),
-    path("edit/", views.edit, name="edit"),
-    path("details/", views.details, name="details"),
-    path("adharCard/", views.adharCardView, name="adhar card"),
-    path('submit_timesheet/', views.submit_timesheet, name='submit_timesheet'),
     path('task/', views.give_tasks, name='task'),
     path('show_task/', views.show_task, name='show_task'),
+    path('submit_result/<int:pk>/', views.submit_result, name='submit_result'),
+    path('check_all_result/', views.check_answers_and_show_results, name='check_all_result'),
 ]

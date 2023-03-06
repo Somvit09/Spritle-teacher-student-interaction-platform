@@ -1,12 +1,15 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout as auth_logout
 from .forms import LoginForm, SignUpForm_Student, SignUpForm_teacher
 from django.contrib.auth.decorators import login_required
 from .models import RegisterTeacher, RegisterStudent, Details
 from django.contrib import messages
-from .forms import AadhaarForm, DetailForm, TimeSheetForm, GiveTaskForm
-from .models import Aadhaar,TimeSheet, TaskModel
+from .forms import AadhaarForm, DetailForm, TimeSheetForm, GiveTaskForm, SubmitResultForm
+from .models import Aadhaar, TimeSheet, TaskModel, SubmitResult
 from django.http import JsonResponse
+from authentication.Calculation import calculate_mathematical_operations
+from word2number import w2n
+
 
 #  icons-argon - https://demos.creative-tim.com/black-dashboard/examples/icons.html
 
@@ -121,10 +124,10 @@ def register_teacher(request):
 
 @login_required(login_url='/login/')
 def profile(request):
-    student_object = RegisterStudent.objects.filter(username=request.user).exists()
-    teacher_object = RegisterTeacher.objects.filter(username=request.user).exists()
-    if student_object:  # if user is student returns True
-        student_object = RegisterStudent.objects.get(username=request.user)  # get that particular user
+    student_object = RegisterStudent.objects.filter(username=request.user).first()
+    teacher_object = RegisterTeacher.objects.filter(username=request.user).first()
+    print(student_object)
+    if student_object:
         data = dict(
             username=request.user,
             first_name=student_object.first_name,
@@ -134,11 +137,10 @@ def profile(request):
             stream=student_object.stream,
             roll_no=student_object.roll_no,
             student_id=student_object.student_id,
-            email=student_object.email  # making a context
+            email=student_object.email
         )
-        return render(request, 'accounts/profile_student.html', data)  # sending the context to the template
-    elif teacher_object:  # if user is teacher return True
-        teacher_object = RegisterTeacher.objects.get(username=request.user)
+        return render(request, 'accounts/profile_student.html', data)
+    elif teacher_object:
         data = dict(
             username=request.user,
             first_name=teacher_object.first_name,
@@ -146,12 +148,12 @@ def profile(request):
             subject=teacher_object.subject,
             classes_taught=teacher_object.classes_taught,
             contact_number=teacher_object.contact_number,
-            teacher_id=teacher_object.teacher_id,  # making a context
+            teacher_id=teacher_object.teacher_id,
             email=teacher_object.email
         )
-        return render(request, 'accounts/profile_teacher.html', data)  # sending the context to the template
+        return render(request, 'accounts/profile_teacher.html', data)
     else:
-        return redirect('login')  # if no user then return back to login
+        return redirect('login')
 
 
 @login_required(login_url='login')
@@ -165,193 +167,95 @@ def logout(request):
     messages.success(request, "user logged out successfully.")
     return redirect('login')
 
-@login_required(login_url='/login/')
-def adharCardView(request):
-    student_object = RegisterStudent.objects.filter(username=request.user).exists()
-    teacher_object = RegisterTeacher.objects.filter(username=request.user).exists()
-    form = AadhaarForm()
-    # if student_object:
-    #     if request.method == 'POST':
-    #         form = AadhaarForm(request.POST, request.FILES)
-    #         if form.is_valid():
-    #             aadhaar_number = form.cleaned_data['aadhaar_number']
-    #             aadhaar_file = form.cleaned_data['aadhaar_file']
-    #             aadhaar = Aadhaar(aadhaar_number=aadhaar_number, aadhaar_file=aadhaar_file)
-    #             form.save()
-    #             # student = RegisterStudent(student_adhar_number=aadhaar_number, student_adhar_file=aadhaar_file)
-    #             # student.save()
-    #             aadhaar.save()
-    #             messages.success(request, "Successfully added Adhar Card.")
-    #             return render(request, 'home/index.html')
-    #         else:
-    #             form = AadhaarForm()
-    # if teacher_object:
-    #     if request.method == 'POST':
-    #         form = AadhaarForm(request.POST, request.FILES)
-    #         if form.is_valid():
-    #             aadhaar_number = form.cleaned_data['aadhaar_number']
-    #             aadhaar_file = form.cleaned_data['aadhaar_file']
-    #             aadhaar = Aadhaar(aadhaar_number=aadhaar_number, aadhaar_file=aadhaar_file)
-    #             form.save()
-    #             # teacher = RegisterTeacher(teacher_adhar_number=aadhaar_number, teacher_adhar_file=aadhaar_file)
-    #             # teacher.save()
-    #             aadhaar.save()
-    #             messages.success(request, "Successfully added Adhar Card.")
-    #             return render(request, 'home/index.html')
-    #         else:
-    #             form = AadhaarForm()
-    if request.user.is_authenticated:
-        if request.method == "POST":
-            form = AadhaarForm(request.POST, request.FILES)
-            if form.is_valid():
-                aadhaar_number = form.cleaned_data['aadhaar_number']
-                aadhaar_file = form.cleaned_data['aadhaar_file']
-                aadhaar = Aadhaar.objects.create(aadhaar_number=aadhaar_number, aadhaar_file=aadhaar_file)
-                aadhaar.save()
-                messages.success(request, "Successfully added Adhar Card.")
-                return redirect('home')
-            else:
-                form = AadhaarForm()
-
-    return render(request, 'accounts/aadhaar_upload.html', context={'formData': form})
-
 
 @login_required(login_url='/login/')
-def details(request):
-    form = DetailForm()
-    student_object = RegisterStudent.objects.filter(username=request.user).exists()
-    teacher_object = RegisterTeacher.objects.filter(username=request.user).exists()
-    # if student_object:
-    #     if request.method == 'POST':
-    #         form = AadhaarForm(request.POST, request.FILES)
-    #         if form.is_valid():
-    #             aadhaar_number = form.cleaned_data['aadhaar_number']
-    #             aadhaar_file = form.cleaned_data['aadhaar_file']
-    #             aadhaar = Aadhaar(aadhaar_number=aadhaar_number, aadhaar_file=aadhaar_file)
-    #             form.save()
-    #             # student = RegisterStudent(student_adhar_number=aadhaar_number, student_adhar_file=aadhaar_file)
-    #             # student.save()
-    #             aadhaar.save()
-    #             messages.success(request, "Successfully added Adhar Card.")
-    #             return render(request, 'home/index.html')
-    #         else:
-    #             form = AadhaarForm()
-    # if teacher_object:
-    #     if request.method == 'POST':
-    #         form = AadhaarForm(request.POST, request.FILES)
-    #         if form.is_valid():
-    #             aadhaar_number = form.cleaned_data['aadhaar_number']
-    #             aadhaar_file = form.cleaned_data['aadhaar_file']
-    #             aadhaar = Aadhaar(aadhaar_number=aadhaar_number, aadhaar_file=aadhaar_file)
-    #             form.save()
-    #             # teacher = RegisterTeacher(teacher_adhar_number=aadhaar_number, teacher_adhar_file=aadhaar_file)
-    #             # teacher.save()
-    #             aadhaar.save()
-    #             messages.success(request, "Successfully added Adhar Card.")
-    #             return render(request, 'home/index.html')
-    #         else:
-    #             form = AadhaarForm()
-    if request.user.is_authenticated:
-        print(request.user.id)
-        if request.method == "POST":
-            form = DetailForm(request.POST, request.FILES)
-            if form.is_valid():
-                company_name = form.cleaned_data['company_name']
-                joining_date = form.cleaned_data['joining_date']
-                upload_document = form.cleaned_data['upload_document']
-                last_working_date = form.cleaned_data['last_working_date']
-                details = Details(company_name=company_name, joining_date=joining_date, last_working_date=last_working_date, upload_document=upload_document)
-                details.save()
-                messages.success(request, "Successfully added Details.")
-                return redirect('home')
-            else:
-                form = DetailForm()
-
-    return render(request, 'accounts/details.html', context={'formd': form})
-
-@login_required(login_url='/login/')
-def edit(request):
-    form = DetailForm()
-    if request.user.is_authenticated:
-        user = request.user.id
-        details = Details.objects.get(id=user)
-        if request.method == 'POST':
-            form = DetailForm(request.POST, request.FILES)
-            if form.is_valid():
-                company_name = details.company_name
-                joining_date = details.joining_date
-                upload_document = details.upload_document
-                last_working_date = details.last_working_date
-                details.save(company_name=company_name, joining_date=joining_date, upload_document=upload_document, last_working_date=last_working_date)
-                messages.success(request, "Successfully edited Details.")
-                return redirect('home')
-            else:
-                form = DetailForm()
-    return render(request, 'accounts/edit.html', context={'formd': form})
-
-@login_required(login_url='/login/')
-def all_details(request):
-    details = Details.objects.all()
-    data = {}
-    all_companies = []
-    all_joining_dates = []
-    last_joining_dates = []
-    uploaded_documnets = []
-    for i in details:
-        all_companies.append(i.company_name)
-        all_joining_dates.append(i.joining_date)
-        last_joining_dates.append(i.last_working_date)
-        uploaded_documnets.append(i.upload_document)
-    data = list(zip(all_companies, all_joining_dates, last_joining_dates, uploaded_documnets))
-    return render(request, 'accounts/all_details.html', {'data': data})
-
-
-@login_required
-def submit_timesheet(request):
-    if request.user.is_authenticated:
-        form = TimeSheetForm()
-        if request.method == 'POST':
-            form = TimeSheetForm(request.POST)
-            if form.is_valid():
-                date = form.cleaned_data['date']
-                start_time = form.cleaned_data['start_time']
-                end_time = form.cleaned_data['end_time']
-                employee = str(request.user._wrapped)
-                timesheet = TimeSheet(date=date, start_time=start_time, end_time=end_time, employee=employee)
-                timesheet.save()
-                print(type(timesheet.employee))
-                messages.success(request, 'Successfully submitted the timesheet.')
-                return redirect('home')
-        else:
-            form = TimeSheetForm()
-        return render(request, 'accounts/timesheet_form.html', {'form': form})
-
-
 def give_tasks(request):
-    teacher_object = RegisterTeacher.objects.get(username=request.user.username)
-    if request.user.is_authenticated:
-        form = GiveTaskForm()
-        if request.method == 'POST':
-            form = GiveTaskForm(request.POST)
-            if form.is_valid():
-                task_data = form.cleaned_data['task']
-                task = TaskModel(task=task_data, teacher=teacher_object.username)
-                task.save()
-                messages.success(request, "You have added a new task.")
-                return redirect('home')
-        else:
+    teacher = request.user.username
+    teacher_object = RegisterTeacher.objects.filter(username=request.user).first()
+    if teacher_object:
+        if request.user.is_authenticated:
             form = GiveTaskForm()
-    return render(request, 'accounts/task.html', {'form': form})
+            if request.method == 'POST':
+                form = GiveTaskForm(request.POST)
+                if form.is_valid():
+                    task_data = form.cleaned_data['task']
+                    task = TaskModel(task=task_data, teacher=teacher)
+                    task.save()
+                    messages.success(request, "You have added a new task.")
+                    return redirect('home')
+            else:
+                form = GiveTaskForm()
+        return render(request, 'accounts/task.html', {'form': form})
+    else:
+        messages.error(request, "You are not a valid teacher. Please login with teacher id and password.")
+        return redirect('login')
 
 
+@login_required(login_url='/login/')
 def show_task(request):
     if request.user.is_authenticated:
         tasks = TaskModel.objects.all()
         all_tasks = []
         all_teachers = []
+        task_id = []
         for i in tasks:
             all_tasks.append(i.task)
             all_teachers.append(i.teacher)
-        data = list(zip(all_tasks, all_teachers))
+            task_id.append(i.id)
+        data = list(zip(all_tasks, all_teachers, task_id))
         return render(request, 'accounts/show_details.html', {'data': data})
+
+
+@login_required(login_url='/login/')
+def submit_result(request, pk):
+    student = RegisterStudent.objects.filter(username=request.user).first()
+    if student:
+        task_object = get_object_or_404(TaskModel, pk=pk)
+        student = request.user
+        task = task_object.task
+        if request.user.is_authenticated:
+            form = SubmitResultForm()
+            if request.method == 'POST':
+                form = SubmitResultForm(request.POST)
+                if form.is_valid():
+                    answer = form.cleaned_data['answer']
+                    result = SubmitResult(task=task, student=student, answer=answer)
+                    result.save()
+                    messages.success(request, "You have successfully submitted the answer.")
+                    return redirect('home')
+            else:
+                form = SubmitResultForm()
+        return render(request, 'accounts/submit_result.html', {'form': form, 'task': task})
+    else:
+        messages.error(request, "You are not a valid student. Please login with student id and password.")
+        return redirect('login')
+
+
+@login_required(login_url='/login/')
+def check_answers_and_show_results(request):
+    results = SubmitResult.objects.all()
+    students = []
+    answers = []
+    tasks = []
+    correct_answers = []
+    is_correct = []
+    for i in results:
+        students.append(i.student)
+        answers.append(i.answer)
+        tasks.append(i.task)
+        correct_answer = calculate_mathematical_operations(i.task)
+        correct_answers.append(correct_answer)
+        if type(int(i.answer)):
+            if int(i.answer) == correct_answer:
+                is_correct.append(True)
+            else:
+                is_correct.append(False)
+        else:
+            answer = w2n.word_to_num(i.answer)
+            if answer == correct_answer:
+                is_correct.append(True)
+            else:
+                is_correct.append(False)
+    data = list(zip(tasks, answers, students, correct_answers, is_correct))
+    return render(request, 'accounts/check_and_show_details.html', {'data': data})
 

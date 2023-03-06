@@ -50,35 +50,30 @@
         </a>
       </li>
       <li>
+        <a href="{% url 'task' %}" >
+          <i class="tim-icons icon-paper"></i>
+          <p>Task Upload</p>
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'show_task' %}" >
+          <i class="tim-icons icon-badge"></i>
+          <p>See All Tasks</p>
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'check_all_result' %}" >
+          <i class="tim-icons icon-check-2"></i>
+          <p>See All Checked Results</p>
+        </a>
+      </li>
+      <li>
         <a href="{% url 'logout' %}" >
           <i class="tim-icons icon-button-power"></i>
           <p>Logout</p>
         </a>
       </li>
       <li>
-        <a href="{% url 'adhar card' %}" >
-          <i class="tim-icons icon-simple-add"></i>
-          <p>Adhar Card Upload</p>
-        </a>
-      </li>
-      <li>
-        <a href="{% url 'details' %}" >
-          <i class="tim-icons icon-paper"></i>
-          <p>Details Upload</p>
-        </a>
-      </li>
-      <li>
-        <a href="{% url 'all_details' %}" >
-          <i class="tim-icons icon-badge"></i>
-          <p>See Details</p>
-        </a>
-      </li>
-      <li>
-        <a href="{% url 'submit_timesheet' %}" >
-          <i class="tim-icons icon-watch-time"></i>
-          <p>Add TimeSheet</p>
-        </a>
-      </li>
       {% endif %}
 
 

@@ -263,3 +263,11 @@ class GiveTaskForm(forms.Form):
             }
         ))
 
+class SubmitResultForm(forms.Form):
+    answer = forms.CharField(max_length=250,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                'placeholder': 'Enter Answer',
+            }
+        ))

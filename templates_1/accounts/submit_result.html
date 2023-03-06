@@ -14,11 +14,17 @@
                 <div class="form-group mb-3">
                     {% csrf_token %}
                     <div class="input-group input-group-alternative">
-                      <div class="input-group-prepend">
-                        <span class="input-group-text"><i class="ni ni-hat-"></i></span>
-                      </div>
-                      {{ form.task }}
-                  </div>
+                        <div class="input-group-prepend">
+                          <span class="input-group-text"><i class="ni ni-hat-3"></i></span>
+                        </div>
+                        {{ task }}
+                    </div>
+                    <div class="input-group input-group-alternative">
+                        <div class="input-group-prepend">
+                          <span class="input-group-text"><i class="ni ni-hat-3"></i></span>
+                        </div>
+                        {{ form.answer }}
+                    </div>
                 </div>
 
                 <div class="text-center">
