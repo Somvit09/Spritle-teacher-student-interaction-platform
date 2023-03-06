@@ -213,6 +213,10 @@ def submit_result(request, pk):
         task_object = get_object_or_404(TaskModel, pk=pk)
         student = request.user
         task = task_object.task
+        check_if_student_already_exists = SubmitResult.objects.filter(student=request.user, task=task).first()
+        if check_if_student_already_exists:
+            messages.success(request, "You have already attended this question. Please answer another question.")
+            return redirect('home')
         if request.user.is_authenticated:
             form = SubmitResultForm()
             if request.method == 'POST':
